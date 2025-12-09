@@ -171,7 +171,7 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
     }
 
     const pool = await connectToDB();
-
+    
     // 1. Obtener permisos actuales del usuario (no eliminados)
     const [permisosActuales] = await pool.query<RowDataPacket[]>(
       `SELECT id_permiso, id_role FROM permisos 
@@ -191,7 +191,8 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
     }
 
     // 4. Iniciar transacción para consistencia
-    await pool.query("START TRANSACTION");
+    const connection = await pool.getConnection();
+    connection.beginTransaction();
 
     try {
       // 5. Agregar nuevos roles en una sola consulta si hay varios
@@ -214,7 +215,8 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
       }
 
       // 7. Confirmar transacción
-      await pool.query("COMMIT");
+      await connection.commit();
+      connection.release();
 
       return {
         success: true,
@@ -223,11 +225,8 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
       };
     } catch (transactionError: any) {
       // Rollback en caso de error
-      try {
-        await pool.query("ROLLBACK");
-      } catch (rollbackError: any) {
-        guardarLogError(`Error en ROLLBACK updateUserRolesService() v1: ${rollbackError.message}`);
-      }
+      await connection.rollback();
+      connection.release();
       throw transactionError;
     }
   } catch (error: any) {
