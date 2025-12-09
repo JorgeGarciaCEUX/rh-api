@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",                        // Moderno pero compatible
+    "module": "commonjs",                      // Requerido por Node.js (puedes usar "ESNext" si usas imports)
+    "rootDir": "src",                          // Carpeta donde están tus archivos .ts
+    "outDir": "build",                         // Carpeta donde se generarán los archivos .js
+    "strict": true,                            // Activa todas las verificaciones estrictas
+    "esModuleInterop": true,                   // Para poder importar módulos CommonJS como `import express from 'express'`
+    "moduleResolution": "node",                // Resolución de módulos al estilo Node.js
+    "forceConsistentCasingInFileNames": true,  // Evita errores por mayúsculas/minúsculas en distintos SO
+    "skipLibCheck": true,                      // Acelera la compilación omitiendo chequeo de tipos de dependencias
+    "resolveJsonModule": true,                 // Permite importar archivos .json
+    "allowJs": false,                          // Por si no quieres permitir archivos .js
+    "noEmitOnError": true,                     // No genera archivos si hay errores
+    "noImplicitAny": true,                     // Evita variables sin tipo
+    "allowSyntheticDefaultImports": true       // Mejor compatibilidad con imports por defecto
+  },
+  "include": ["src"],                          // Incluir solo tu código fuente
+  "exclude": ["node_modules", "build"]         // Excluir dependencias y archivos compilados
+}

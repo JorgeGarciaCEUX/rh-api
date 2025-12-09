@@ -1,0 +1,9 @@
+.vscode/
+build
+keys
+logs
+node_modules
+public
+package-lock.json
+.env
+.DS_Store
