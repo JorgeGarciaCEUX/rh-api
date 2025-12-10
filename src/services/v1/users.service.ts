@@ -29,7 +29,7 @@ export const getUsersService = async () => {
       SELECT
         *
       FROM
-        view_users
+        view_usuarios
     `);
 
     const users: ViewUser[] = rows as ViewUser[];
@@ -48,7 +48,7 @@ export const getUserWithCorreoService = async (correo: string) => {
       SELECT 
         *
       FROM
-        view_users
+        view_usuarios
       WHERE
         correo = ?
     `,
@@ -67,7 +67,7 @@ export const addUserService = async (u: User) => {
   try {
     const pool = await connectToDB();
     const [res] = await pool.query<ResultSetHeader>(
-      ` INSERT INTO users
+      ` INSERT INTO usuarios
             (nombre, apellidos, correo, id_campus)
         VALUES
             (?, ?, ?, ?)
@@ -92,21 +92,21 @@ export const editUserService = async (u: User) => {
     const pool = await connectToDB();
     const [response] = await pool.query<ResultSetHeader>(
       `
-      UPDATE users
+      UPDATE usuarios
       SET
         nombre = ?,
         apellidos = ?,
         correo = ?,
         id_campus = ?
       WHERE
-        id = ?
+        id_usuario = ?
     `,
       [
         upperTrimExtraSpaces(u.nombre),
         upperTrimExtraSpaces(u.apellidos),
         trimExtraSpaces(u.correo),
         u.id_campus,
-        u.id,
+        u.id_usuario,
       ]
     );
 
@@ -123,11 +123,11 @@ export const deleteUserService = async (id: string) => {
     const [response] = await pool.query<ResultSetHeader>(
       `
         UPDATE
-          users
+          usuarios
         SET
           fecha_eliminacion = NOW()
         WHERE
-          id = ?;
+          id_usuario = ?;
       `,
       [id]
     );
@@ -175,7 +175,7 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
     // 1. Obtener permisos actuales del usuario (no eliminados)
     const [permisosActuales] = await pool.query<RowDataPacket[]>(
       `SELECT id_permiso, id_role FROM permisos 
-       WHERE id_usuario_portal = ? AND fecha_eliminacion IS NULL`,
+       WHERE id_usuario = ? AND fecha_eliminacion IS NULL`,
       [id_usuario]
     );
 
@@ -199,7 +199,7 @@ export const updateUserRolesService = async (id_usuario: number, roles: number[]
       if (rolesAAgregar.length > 0) {
         const valores = rolesAAgregar.map(roleId => `(${pool.escape(id_usuario)}, ${pool.escape(roleId)}, ${pool.escape(quien_cambio)})`).join(',');
         await pool.query<ResultSetHeader>(
-          `INSERT INTO permisos (id_usuario_portal, id_role, quien_dio_permiso) VALUES ${valores}`
+          `INSERT INTO permisos (id_usuario, id_role, quien_dio_permiso) VALUES ${valores}`
         );
       }
 

@@ -25,7 +25,7 @@ export const getPermisosUsuarioService = async (id: number) => {
       FROM
         view_permisos
       WHERE
-        id_usuario_portal = ? 
+        id_usuario = ? 
       `,
       [id]
     );
@@ -35,3 +35,25 @@ export const getPermisosUsuarioService = async (id: number) => {
     return null;
   }
 };
+
+export const addRecordLoginService = async (id_user: number, correo: string, ip: string, user_agent: string, plataforma: string) => {
+
+  try {
+    const pool = await connectToDB();
+    const response = await pool.query(
+      `
+      INSERT INTO
+        record_login
+          (id_usuario, correo, ip, user_agent, plataforma)
+      VALUES
+          (?, ?, ?, ?, ?)
+    `,
+      [id_user, correo, ip, user_agent, plataforma]
+    );
+
+    return response;
+  } catch (error: any) {
+    guardarLogError("Error en addRecordLoginService() v1:");
+    return null;
+  }
+}

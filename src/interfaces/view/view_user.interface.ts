@@ -1,7 +1,7 @@
 import { ViewPermiso } from "./view_permiso.interface";
 
 export interface ViewUser {
-  id: number;
+  id_usuario: number;
   nombre: string;
   apellidos: string;
   correo: string;

@@ -1,6 +1,6 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { getCorreoFirebase, getPermisosUsuarioService } from "../../services/v1/auth.service";
+import { addRecordLoginService, getCorreoFirebase, getPermisosUsuarioService } from "../../services/v1/auth.service";
 import { guardarLogError, guardarLogInfo } from "../../utils/logs";
 import { getUserWithCorreoService } from "../../services/v1/users.service";
 import { formatMysqlErrorResponse } from "../../utils/errores";
@@ -29,10 +29,10 @@ export const login = async (req: any, res: Response) => {
       return;
     }
 
-    const permisos = await getPermisosUsuarioService(usuario.id);
+    const permisos = await getPermisosUsuarioService(usuario.id_usuario);
 
     if (permisos === null) {
-      guardarLogError("No se encontraron permisos para el usuario id: " + usuario.id);
+      guardarLogError("No se encontraron permisos para el usuario id: " + usuario.id_usuario);
       res.json({
         result: "error",
         tit: "No se encontraron permisos para el usuario",
@@ -41,10 +41,10 @@ export const login = async (req: any, res: Response) => {
       return;
     }
 
-    const { nombre, apellidos, id, campus, id_campus } = usuario;
+    const { nombre, apellidos, id_usuario, campus, id_campus } = usuario;
     const token = jwt.sign(
       {
-        id,
+        id_usuario,
         nombre,
         apellidos,
         correo,
@@ -60,6 +60,23 @@ export const login = async (req: any, res: Response) => {
 
     const correo_user = usuario.correo;
     guardarLogInfo(`El correo ${correo_user} ha iniciado sesión`);
+
+    //get the ip of the client
+    var ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+
+    if (ip === '::1') {
+      ip = '127.0.0.1';
+    }
+
+    //get the user agent of the client
+    const user_agent = req.headers["user-agent"];
+
+    //get the platform origin of the client
+    //and remove the "" from the string
+    var plataforma = req.headers["sec-ch-ua-platform"] ? req.headers["sec-ch-ua-platform"].toString().replace(/"/g, '') : 'unknown';
+
+    await addRecordLoginService(usuario.id_usuario, usuario.correo, ip, user_agent, plataforma);
+    
     res.json({
       result: "ok",
       tit: "¡ÉXITO!",
