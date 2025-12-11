@@ -182,7 +182,7 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                 AND campus LIKE '${campus}'
       `);
 
-        const info_docente = result_info_academica.recordset[0];
+        const info_docente = result_info_academica.recordset;
 
         if (!info_docente) {
             throw new Error("No se pudo obtener la información académica del docente desde PWC.");
