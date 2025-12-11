@@ -38,7 +38,7 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
                     a.STATE as estado,
                     UPPER(a.CITY ) as ciudad,
                     a.ZIP_CODE as codigo_postal,
-                    p.PREFIX as cat_estatuto
+                    p.PREFIX as prefijo
                 FROM 
                     PEOPLE AS p
                     LEFT JOIN EmailAddress as ea ON p.PEOPLE_ID = ea.PeopleOrgId 
@@ -215,8 +215,8 @@ export const getInfoDocenteNomipaqService = async (search_term: string): Promise
         const result_info_personal = await pwcConnection.request().query(`
             WITH DOCENTES AS (
                 SELECT DISTINCT
-                    idempleado,
-                    codigoempleado,
+                    id_empleado,
+                    codigo_empleado,
                     UPPER(RTRIM(CONCAT(n.apellidopaterno, ' ', n.apellidomaterno))) as apellidos,
                     UPPER(RTRIM(n.nombre)) as nombre,
                     -- CORRECCIÓN AQUI: Usamos FORMAT para obtener '230101' (AAMMDD)
@@ -229,8 +229,8 @@ export const getInfoDocenteNomipaqService = async (search_term: string): Promise
                     nom10001 as n
             )
             SELECT DISTINCT
-                idempleado,
-                codigoempleado,
+                id_empleado,
+                codigo_empleado,
                 apellidos,
                 nombre,
                 curp,
