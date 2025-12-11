@@ -6,16 +6,10 @@ export interface InfoPersonalDocentePWC {
     nombre: string;
     curp: string;
     correo: string;
-    codigo_tipo_correo: string;
-    tipo_correo: string;
     cumpleanos: string;
-    tipo_domicilio: string;
-    direccion_completa: string;
-    numero: string;
-    codigo_postal: string;
+    direccion: string;
     ciudad: string;
-    estado: string;
-    cat_estatuto: string;
+    prefijo: string;
 }
 
 export interface InfoAcademicaDocentePWC {
@@ -49,8 +43,8 @@ export interface InfoAcademicaDocentePWC {
 }
 
 export interface InfoDocenteNomipaq {
-    idempleado: number;
-    codigoempleado: string;
+    id_empleado: number;
+    codigo_empleado: string;
     apellidos: string;
     nombre: string;
     curp: string;

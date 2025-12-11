@@ -25,19 +25,18 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
                     p.GOVERNMENT_ID AS curp,
                     CONVERT(varchar, p.BIRTH_DATE, 23) cumpleanos,
                     ea.Email as correo,
-                    ea.EmailType as codigo_tipo_correo,
-                    ce.LONG_DESC as tipo_correo,
-                    a.ADDRESS_TYPE tipo_domicilio,
                     RTRIM(
                         COALESCE(NULLIF(a.ADDRESS_LINE_1, ''), '') + ' ' + 
                         COALESCE(NULLIF(a.ADDRESS_LINE_2, ''), '') + ' ' + 
                         COALESCE(NULLIF(a.ADDRESS_LINE_3, ''), '') + ' ' + 
-                        COALESCE(NULLIF(a.ADDRESS_LINE_4, ''), '')
-                    ) AS direccion_completa,
-                    a.HOUSE_NUMBER as numero,
-                    a.STATE as estado,
-                    UPPER(a.CITY ) as ciudad,
-                    a.ZIP_CODE as codigo_postal,
+                        COALESCE(NULLIF(a.ADDRESS_LINE_4, ''), '') + ' ' +
+                        COALESCE(NULLIF(a.HOUSE_NUMBER, ''), '') + '' +
+                        COALESCE(NULLIF(', ' + a.ZIP_CODE, ''), '')
+                    ) AS direccion,
+                    RTRIM(
+                        COALESCE(NULLIF(UPPER(a.CITY), ''), '') + '' +
+                        COALESCE(NULLIF(', ' + a.STATE, ''), '')
+                    ) AS ciudad,
                     p.PREFIX as prefijo
                 FROM 
                     PEOPLE AS p
@@ -61,22 +60,16 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
             nombre,
             curp,
             correo,
-            codigo_tipo_correo,
-            tipo_correo,
             cumpleanos,
-            tipo_domicilio,
-            direccion_completa,
-            numero,
-            codigo_postal,
+            direccion,
             ciudad,
-            estado,
             prefijo
             FROM 
             ACADEMIC_INFO
             WHERE 
             ( nombre LIKE '%' + '${search_term}' + '%' OR apellidos LIKE '%' + '${search_term}' + '%')
             ORDER BY apellidos, nombre
-      `);
+        `);
 
         const info_docente = result_info_personal.recordset[0];
 
