@@ -4,6 +4,7 @@ import { guardarLogError } from "./logs";
 export const handleMysqlError = (e: any) => {
   guardarLogError(`code: ${e.code}`);
   guardarLogError(`errno: ${e.errno}`);
+  guardarLogError(`message: ${e.message}`);
   guardarLogError(`sql: ${e.sql}`);
   guardarLogError(`sqlState: ${e.sqlState}`);
   guardarLogError(`sqlMessage: ${e.sqlMessage}`);
@@ -20,7 +21,7 @@ export const handleMysqlError = (e: any) => {
   if (e.code === "ER_TRUNCATED_WRONG_VALUE_FOR_FIELD") return "valor-truncado";
   if (e.code === "ER_LOCK_WAIT_TIMEOUT") return "tiempo-espera-bloqueo";
 
-  return null;
+  return e.message || "error-desconocido";
 };
 
 export const formatMysqlErrorResponse = (errorType: string | null): ApiResponse => {
@@ -111,7 +112,7 @@ export const formatMysqlErrorResponse = (errorType: string | null): ApiResponse 
     default:
       return {
         result: "error",
-        tit: "Error desconocido en la base de datos",
+        tit: `Error: ${errorType}`,
         msg: "Ocurrió un error inesperado. Contacte con soporte.",
       };
   }

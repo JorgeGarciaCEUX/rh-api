@@ -70,7 +70,7 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
             codigo_postal,
             ciudad,
             estado,
-            cat_estatuto
+            prefijo
             FROM 
             ACADEMIC_INFO
             WHERE 
@@ -215,8 +215,8 @@ export const getInfoDocenteNomipaqService = async (search_term: string): Promise
         const result_info_personal = await pwcConnection.request().query(`
             WITH DOCENTES AS (
                 SELECT DISTINCT
-                    id_empleado,
-                    codigo_empleado,
+                    idempleado as id_empleado,
+                    codigoempleado as codigo_empleado,
                     UPPER(RTRIM(CONCAT(n.apellidopaterno, ' ', n.apellidomaterno))) as apellidos,
                     UPPER(RTRIM(n.nombre)) as nombre,
                     -- CORRECCIÓN AQUI: Usamos FORMAT para obtener '230101' (AAMMDD)
