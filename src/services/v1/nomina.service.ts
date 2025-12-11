@@ -80,8 +80,6 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
 
         const info_docente = result_info_personal.recordset;
 
-        console.log("Información personal del docente desde PWC:", info_docente);
-
         if (!info_docente) {
             throw new Error("No se pudo obtener la información personal del docente desde PWC.");
         }
