@@ -134,7 +134,10 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     sp.ACADEMIC_YEAR as anio,
                     sp.ACADEMIC_TERM as periodo,
                     sp.ACADEMIC_SESSION as campus,
-                    sp.SECTION as sections,
+                    sp.SECTION as grupo, --- Cambio de nombre a Grupo de Sections
+                    se.CREDIT_TYPE as tipo, --- LICE, PREP, MAES, DOCT
+                    cc.LONG_DESC as carrera, --- EJ: ENFERMERIA, MEDICINA, MEDICINA BILINGUE
+                    se.CLASS_LEVEL as nivel_clase, --- EJ: 1CUA, 4SEM, 2SEM, 3CUA
                     se.EVENT_LONG_NAME as nombre_materia,
                     se.START_DATE as periodo_inicial,
                     se.END_DATE as periodo_final,
@@ -153,6 +156,7 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     cp.VIERNES_ENTRADA, cp.VIERNES_SALIDA, cp.VIERNES_TOTAL
                 FROM SECTIONPER sp
                 LEFT JOIN SECTIONS as se ON se.EVENT_ID = sp.EVENT_ID
+                LEFT JOIN CODE_CURRICULUM as cc ON se.CURRICULUM = cc.CODE_VALUE_KEY
                 LEFT JOIN CALENDAR_PIVOT as cp ON cp.EVENT_ID = sp.EVENT_ID
             )
             SELECT DISTINCT
@@ -161,7 +165,10 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                 anio,
                 periodo,
                 campus,
-                sections,
+                tipo,
+                carrera,
+                nivel_clase,
+                grupo,
                 nombre_materia,
                 periodo_inicial,
                 periodo_final,

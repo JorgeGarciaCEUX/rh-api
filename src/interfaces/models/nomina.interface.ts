@@ -25,6 +25,12 @@ export interface InfoAcademicaDocentePWC {
     total_horas_programa: number;
     total_semanas_efectivas: number;
     horas_por_semana: number;
+
+    // Propiedades necesarias para el cálculo de grupo de carrera
+    tipo: string; // Tipo de programa (PREP, LIC, etc.)
+    carrera: string; // Nombre de la carrera
+    nivel_clase: string; // Nivel de la clase (ej: 1CUA, 6N, 3SEM) - usado para determinar grupo en Medicina
+    
     lunes_entrada: string | null;
     lunes_salida: string | null;
     lunes_total: number;
