@@ -71,7 +71,7 @@ export const getInfoPersonalDocentePWCService = async (search_term: string): Pro
             ORDER BY apellidos, nombre
         `);
 
-        const info_docente = result_info_personal.recordset[0];
+        const info_docente = result_info_personal.recordset;
 
         if (!info_docente) {
             throw new Error("No se pudo obtener la información personal del docente desde PWC.");
@@ -243,7 +243,7 @@ export const getInfoDocenteNomipaqService = async (search_term: string): Promise
             ORDER BY apellidos, nombre
             `);
 
-        const info_docente = result_info_personal.recordset[0];
+        const info_docente = result_info_personal.recordset;
         
         return info_docente as InfoDocenteNomipaq[];
     } catch (error: any) {

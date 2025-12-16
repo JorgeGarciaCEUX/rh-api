@@ -3,7 +3,7 @@ import { getInfoAcademicaDocentePWCService, getInfoDocenteNomipaqService, getInf
 import { formatMysqlErrorResponse } from "../../utils/errores";
 
 
-export const getInfoDocente = async (req: any, res: Response) => {
+export const searchDocente = async (req: any, res: Response) => {
     const { search_term } = req.params;
     
     const info_docente_pwc = await getInfoPersonalDocentePWCService(search_term);
