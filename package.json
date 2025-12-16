@@ -16,6 +16,7 @@
   "description": "",
   "dependencies": {
     "cors": "^2.8.5",
+    "excel4node": "^1.8.2",
     "express": "^4.21.1",
     "firebase-admin": "^12.7.0",
     "jsonwebtoken": "^9.0.2",

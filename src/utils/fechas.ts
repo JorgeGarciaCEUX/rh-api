@@ -66,3 +66,21 @@ const obtenerNombreMes = (numeroMes: number): string => {
 
   return "";
 };
+
+
+export const obtenerFechaActual = () => {
+  const fecha = new Date();
+
+  const dia = fecha.getDate();
+  const mes = fecha.getMonth() + 1;
+  const anio = fecha.getFullYear();
+  const hora = fecha.getHours();
+  const minuto = fecha.getMinutes();
+
+  const nombreMes = obtenerNombreMes(mes);
+  const minutoFormateado = minuto < 10 ? `0${minuto}` : minuto;
+
+  const fechaActual = `${dia} de ${nombreMes} de ${anio} ${hora}:${minutoFormateado}`;
+
+  return fechaActual;
+};
