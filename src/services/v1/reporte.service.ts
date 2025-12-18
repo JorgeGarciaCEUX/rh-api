@@ -1,3 +1,4 @@
+import e from "express";
 import { InfoNominalDocente } from "../../interfaces/models/infoNominalDocente.interface";
 import { obtenerFechaActual } from "../../utils/fechas";
 import { guardarLogError } from "../../utils/logs";
@@ -19,6 +20,24 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
 
     var styleTitulo = wb.createStyle({
       alignment: {
+        horizontal: ["left"],
+        vertical: ["bottom"],
+        wrapText: true,
+      },
+      font: {
+        color: "#000000",
+        size: 12,
+        bold: true,
+      },
+      fill: {
+        type: "pattern",
+        patternType: "solid",
+        fgColor: "#FFFFFF",
+      },
+    });
+
+    var styleTituloNomina = wb.createStyle({
+      alignment: {
         horizontal: ["center"],
         vertical: ["center"],
         wrapText: true,
@@ -31,7 +50,7 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
       fill: {
         type: "pattern",
         patternType: "solid",
-        fgColor: "#ffffff",
+        fgColor: "#b9e7a7",
       },
     });
 
@@ -214,7 +233,79 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
       },
     });
 
-    var encabezadosReporte = [
+    var styleDatosNumeroContabilidad = wb.createStyle({
+      alignment: {
+        horizontal: ["right"],
+        vertical: ["center"],
+        wrapText: true,
+      },
+      font: {
+        color: "#000000",
+        size: 8,
+      },
+      border: {
+        left: {
+          style: "thin",
+          color: "#000000",
+        },
+        right: {
+          style: "thin",
+          color: "#000000",
+        },
+        top: {
+          style: "thin",
+          color: "#000000",
+        },
+        bottom: {
+          style: "thin",
+          color: "#000000",
+        },
+      },
+      fill: {
+        type: "pattern",
+        patternType: "solid",
+        fgColor: "#FFFFFF",
+      },
+      numberFormat: "$#,##0.00",
+    });
+
+    var styleDatosNumeroMillares = wb.createStyle({
+      alignment: {
+        horizontal: ["right"],
+        vertical: ["center"],
+        wrapText: true,
+      },
+      font: {
+        color: "#000000",
+        size: 8,
+      },
+      border: {
+        left: {
+          style: "thin",
+          color: "#000000",
+        },
+        right: {
+          style: "thin",
+          color: "#000000",
+        },
+        top: {
+          style: "thin",
+          color: "#000000",
+        },
+        bottom: {
+          style: "thin",
+          color: "#000000",
+        },
+      },
+      fill: {
+        type: "pattern",
+        patternType: "solid",
+        fgColor: "#FFFFFF",
+      },
+      numberFormat: "#,##0.00",
+    });
+
+    var encabezadosReporteDocente = [
       {
         nombre: "CÓDIGO EMPLEADO",
         width: 10,
@@ -227,34 +318,37 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
       },
       {
         nombre: "CURP",
-        width: 10,
-        style: styleTituloDocente,
-      },
-      {
-        nombre: "RFC",
-        width: 10,
-        style: styleTituloDocente,
-      },
-      {
-        nombre: "GRADO",
         width: 15,
         style: styleTituloDocente,
       },
       {
-        nombre: "CORREO ELECTRÓNICO",
-        width: 10,
+        nombre: "RFC",
+        width: 15,
         style: styleTituloDocente,
       },
       {
-        nombre: "DOMICILIO PARTICULAR DOCENTE (Calle, No., Colonia)",
+        nombre: "GRADO",
         width: 20,
         style: styleTituloDocente,
       },
       {
-        nombre: "CIUDAD O POBLACIÓN",
-        width: 10,
+        nombre: "CORREO ELECTRÓNICO",
+        width: 20,
         style: styleTituloDocente,
       },
+      {
+        nombre: "DOMICILIO PARTICULAR DOCENTE (Calle, No., Colonia)",
+        width: 25,
+        style: styleTituloDocente,
+      },
+      {
+        nombre: "CIUDAD O POBLACIÓN",
+        width: 15,
+        style: styleTituloDocente,
+      }
+    ];
+
+    var encabezadosReporteDescriptiva = [
       {
         nombre: "AÑOS DE EXPERIENCIA DEL DOCENTE EN LA MATERIA A IMPARTIR",
         width: 15,
@@ -269,7 +363,10 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         nombre: "AÑOS DE EXPERIENCIA QUE MARCA LA CARTA DESCRIPTIVA",
         width: 15,
         style: styleTituloCartaDescriptiva,
-      },
+      }
+    ];
+
+    var encabezadosReporteAcademico = [
       {
         nombre: "CAT (Estatuto)",
         width: 10,
@@ -319,7 +416,10 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         nombre: "TOTAL DE HORAS",
         width: 10,
         style: styleTituloAcademico,
-      },
+      }
+    ];
+
+    var encabezadosReporteHorario = [
       {
         nombre: "LUNES ENTRADA",
         width: 10,
@@ -396,32 +496,130 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         style: styleTituloHorario,
       }
     ];
+
+    var encabezadosReporteNomina = [
+      {
+        nombre: "TOTAL HORAS DEL DOCENTE",
+        width: 15,
+        style: styleTituloDocente,
+      },
+      {        
+        nombre: "COSTO X HORA",
+        width: 15,
+        style: styleTituloDocente,
+      },
+      {
+        nombre: "TOTAL MATERIAS",
+        width: 15,
+        style: styleTituloDocente,
+      },
+      {
+        nombre: "DIAS PERIODO",
+        width: 15,
+        style: styleTituloDocente,
+      },
+      {
+        nombre: "COSTO X DIA",
+        width: 15,
+        style: styleTituloDocente,
+      }
+    ];
     
-    const { codigo_empleado, apellidos, nombre } = reporte.info_personal;
-    const { anio, periodo, campus } = reporte.periodo_consulta
+    const { codigo_empleado } = reporte.info_personal;
+    const { anio, periodo } = reporte.periodo_consulta
 
     try {
         var ws = wb.addWorksheet(`Reporte Nómina Docente - ${codigo_empleado}`, options);
         let startRow = 7;
-        ws.cell(2, 1, 5, 12, true)
-        .string(
-            `
-            PLANTILLA DOCENTES
-            NOMBRE DE LA ESCUELA: ${reporte.info_academica[0].carrera}
-            PERIODO: ${periodo.substring(1)}
-            CICLO: ${anio} - ${periodo.charAt(0)}
-        `
-        )
-        .style(styleTitulo);
 
-        //encabezados
-        encabezadosReporte.forEach((element, index) => {
-        ws.cell(startRow, index + 1)
-            .string(element.nombre)
-            .style(element.style);
-        ws.column(index + 1).setWidth(element.width);
+        ws.cell(2, 1, 2, 4, true).string("PLANTILLA DOCENTES").style(styleTitulo);
+        ws.cell(3, 1, 3, 4, true).string(`NOMBRE DE LA ESCUELA: ${reporte.info_academica[0].carrera}`).style(styleTitulo);
+        ws.cell(4, 1, 4, 4, true).string(`PERIODO: ${periodo.substring(1)}`).style(styleTitulo);
+        ws.cell(5, 1, 5, 4, true).string(`CICLO: ${anio} - ${periodo.charAt(0)}`).style(styleTitulo);
+
+        //Encabezado de la sección de datos del docente
+        
+        //Primer renglon que contiene los encabezados
+        ws.cell(startRow, 1, startRow, encabezadosReporteDocente.length, true).string("DATOS DEL DOCENTE").style(styleTituloDocente);
+        ws.cell(startRow, encabezadosReporteDocente.length + 1, startRow, encabezadosReporteDocente.length + encabezadosReporteDescriptiva.length, true).string("CARTA DESCRIPTIVA").style(styleTituloCartaDescriptiva);
+        ws.cell(startRow, encabezadosReporteDocente.length + encabezadosReporteDescriptiva.length + 1, startRow, encabezadosReporteDocente.length + encabezadosReporteDescriptiva.length + encabezadosReporteAcademico.length + encabezadosReporteHorario.length, true).string("INFORMACIÓN PROPORCIONADA POR LA ESCUELA").style(styleTituloAcademico);
+        ws.cell(startRow, encabezadosReporteDocente.length + encabezadosReporteDescriptiva.length + encabezadosReporteAcademico.length + encabezadosReporteHorario.length + 1, startRow, encabezadosReporteDocente.length + encabezadosReporteDescriptiva.length + encabezadosReporteAcademico.length + encabezadosReporteHorario.length + encabezadosReporteNomina.length, true).string("CALCULOS DE NOMINA").style(styleTituloNomina);
+
+        startRow++;
+
+        //Encabezados individuales
+
+        //Datos del docente (Rows seran de 2 renglones)
+        encabezadosReporteDocente.forEach((element, index) => {
+            ws.cell(startRow, index + 1, startRow + 1, index + 1, true)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(index + 1).setWidth(element.width);
         });
 
+        //Datos de la carta descriptiva (Rows seran de 2 renglones)
+        let offsetEncabezados = encabezadosReporteDocente.length;
+
+        encabezadosReporteDescriptiva.forEach((element, index) => {
+            ws.cell(startRow, offsetEncabezados + index + 1, startRow + 1, offsetEncabezados + index + 1, true)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(offsetEncabezados + index + 1).setWidth(element.width);
+        });
+
+        //Datos académicos (Rows seran de 1 renglon)
+        offsetEncabezados += encabezadosReporteDescriptiva.length;
+
+        // Para el caso de academicos, primero se pinta el primer renglon vacio
+        ws.cell(startRow, offsetEncabezados + 1, startRow, offsetEncabezados + encabezadosReporteAcademico.length, true).string("").style(styleTituloAcademico);
+
+        startRow ++;
+        // Despues se pintan los demas encabezados, pero por el renglon vacio, se empieza en el siguiente renglon y solo sera de 1 renglon
+        encabezadosReporteAcademico.forEach((element, index) => {
+            ws.cell(startRow, offsetEncabezados + index + 1)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(offsetEncabezados + index + 1).setWidth(element.width);
+        });
+
+        //regresar al renglon del primer encabezado de academicos
+        startRow--;
+
+        //Horario (Rows seran de 1 renglon, para tener 1 de header para el dia (Lunes, Martes, etc) y otro renglon para entrada, salida, total)
+        offsetEncabezados += encabezadosReporteAcademico.length;
+
+        // Primero se pinta el primer renglon con el header de Lunes, Martes, etc (cada uno con length de 3 columnas)
+        let diasSemana = ["LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES"];
+        diasSemana.forEach((dia, index) => {
+            ws.cell(startRow, offsetEncabezados + index * 3 + 1, startRow, offsetEncabezados + index * 3 + 3, true)
+                .string(dia)
+                .style(styleTituloHorario);
+        });
+
+        //Despues se pintan los demas encabezados, pero por el renglon de dias, se empieza en el siguiente renglon y solo sera de 1 renglon
+        startRow++;
+
+        encabezadosReporteHorario.forEach((element, index) => {
+            ws.cell(startRow, offsetEncabezados + index + 1)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(offsetEncabezados + index + 1).setWidth(element.width);
+        });
+
+        //Reiniciar de nuevo al renglon del primer encabezado
+        startRow--;
+
+        //Encaboezados de cálculos de nómina (Rows seran de 2 renglones)
+        offsetEncabezados += encabezadosReporteHorario.length;
+
+        encabezadosReporteNomina.forEach((element, index) => {
+            ws.cell(startRow, offsetEncabezados + index + 1, startRow + 1, offsetEncabezados + index + 1, true)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(offsetEncabezados + index + 1).setWidth(element.width);
+        });
+
+        startRow++;
         startRow++;
 
         //datos
@@ -434,7 +632,6 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         ws.cell(startRow, 7).string(`${reporte.info_personal.direccion || ''}`).style(styleDatos);
         ws.cell(startRow, 8).string(`${reporte.info_personal.ciudad}`).style(styleDatos);
         ws.cell(startRow, 9).number(reporte.info_descriptiva.anios_experiencia_docente_materia).style(styleDatos);
-        console.log(reporte.info_descriptiva.perfil_marca_carta);
         ws.cell(startRow, 10).string(reporte.info_descriptiva.perfil_marca_carta).style(styleDatos);
         ws.cell(startRow, 11).number(reporte.info_descriptiva.anios_experiencia_marca_carta).style(styleDatos);
         ws.cell(startRow, 12).string(reporte.info_descriptiva.estatuto).style(styleDatos);
@@ -442,7 +639,7 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         reporte.info_academica.forEach((materia, indexMateria) => {
             const filaActual = startRow + indexMateria;
             ws.cell(filaActual, 14).string(materia.nombre_materia).style(styleDatos);
-            ws.cell(filaActual, 15).string(materia.carrera).style(styleDatos);
+            ws.cell(filaActual, 15).string(materia.periodo.charAt(0)).style(styleDatos);
             ws.cell(filaActual, 16).date(new Date(materia.periodo_inicial)).style(styleDatos);
             ws.cell(filaActual, 17).date(new Date(materia.periodo_final)).style(styleDatos);
             ws.cell(filaActual, 18).number(materia.total_horas_programa).style(styleDatos);
@@ -466,6 +663,19 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
             ws.cell(filaActual, 36).number(materia.viernes_total).style(styleDatos);
 
         });
+        //Total de horas del docente (Sumar columna 21)
+        ws.cell(startRow, 37).formula(`SUM(U${startRow}:U${startRow + reporte.info_academica.length -1})`).style(styleDatos);
+        //Costo x hora (Sumar Columna 'M', osea columna 13)
+        // TODO: PREGUNTAR MULTIPLES
+        ws.cell(startRow, 38).formula(`=+M${startRow}`).style(styleDatos);        
+        //Total Materias (Multiplicar Total de horas del docente * Costo x hora)
+        // Agregar a celda formato de moneda (Contabilidad)
+        ws.cell(startRow, 39).formula(`=+AK${startRow}*AL${startRow}`).style(styleDatosNumeroContabilidad);
+        //Dias periodo (Obtener la diferencia entre fecha de inicio y fin del periodo)
+        ws.cell(startRow,40).formula(`=+Q${startRow}-P${startRow}+1`).style(styleDatos);
+        //Costo x dia (Dividir Total materias / Dias periodo)
+        // Agregar a celda formato de numero (Millares)
+        ws.cell(startRow,41).formula(`=+AM${startRow}/AN${startRow}`).style(styleDatosNumeroMillares);
 
     } catch (error: any) {
         guardarLogError("Error al generar el reporte de nómina docente " + error.message);
