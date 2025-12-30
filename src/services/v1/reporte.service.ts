@@ -1,13 +1,12 @@
-import e from "express";
 import { InfoNominalDocente } from "../../interfaces/models/infoNominalDocente.interface";
-import { obtenerFechaActual } from "../../utils/fechas";
+import { ReporteCompletoPlantilla } from "../../interfaces/models/ReporteCompletoPlantilla.interface";
 import { guardarLogError } from "../../utils/logs";
 let excel4node = require("excel4node");
 
-export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente) => {
+export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCompletoPlantilla) => {
 
-    if (!reporte) {
-      throw new Error("No se proporcionó el reporte de nómina docente.");
+    if (!reporteCompleto || !reporteCompleto.registros || reporteCompleto.registros.length === 0) {
+      throw new Error("No se proporcionó el reporte de nómina docente o no contiene registros.");
     }
 
     var wb = new excel4node.Workbook();
@@ -525,15 +524,14 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
       }
     ];
     
-    const { codigo_empleado } = reporte.info_personal;
-    const { anio, periodo } = reporte.periodo_consulta
+    const { anio, periodo, campus } = reporteCompleto.periodo_consulta;
 
     try {
-        var ws = wb.addWorksheet(`Reporte Nómina Docente - ${codigo_empleado}`, options);
+        var ws = wb.addWorksheet(`${campus} ${anio} ${periodo}`, options);
         let startRow = 7;
 
         ws.cell(2, 1, 2, 4, true).string("PLANTILLA DOCENTES").style(styleTitulo);
-        ws.cell(3, 1, 3, 4, true).string(`NOMBRE DE LA ESCUELA: ${reporte.info_academica[0].carrera}`).style(styleTitulo);
+        ws.cell(3, 1, 3, 4, true).string(`CAMPUS: ${campus}`).style(styleTitulo);
         ws.cell(4, 1, 4, 4, true).string(`PERIODO: ${periodo.substring(1)}`).style(styleTitulo);
         ws.cell(5, 1, 5, 4, true).string(`CICLO: ${anio} - ${periodo.charAt(0)}`).style(styleTitulo);
 
@@ -622,22 +620,29 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
         startRow++;
         startRow++;
 
-        //datos
-        ws.cell(startRow, 1).string(`${reporte.info_personal.codigo_empleado}`).style(styleDatos);
-        ws.cell(startRow, 2).string(`${reporte.info_personal.apellidos} ${reporte.info_personal.nombre}`).style(styleDatos);
-        ws.cell(startRow, 3).string(`${reporte.info_personal.curp}`).style(styleDatos);
-        ws.cell(startRow, 4).string(`${reporte.info_personal.rfc}`).style(styleDatos);
-        ws.cell(startRow, 5).string(`${reporte.info_personal.grado || ''}`).style(styleDatos);
-        ws.cell(startRow, 6).string(`${reporte.info_personal.correo}`).style(styleDatos);
-        ws.cell(startRow, 7).string(`${reporte.info_personal.direccion || ''}`).style(styleDatos);
-        ws.cell(startRow, 8).string(`${reporte.info_personal.ciudad}`).style(styleDatos);
-        ws.cell(startRow, 9).number(reporte.info_descriptiva.anios_experiencia_docente_materia).style(styleDatos);
-        ws.cell(startRow, 10).string(reporte.info_descriptiva.perfil_marca_carta).style(styleDatos);
-        ws.cell(startRow, 11).number(reporte.info_descriptiva.anios_experiencia_marca_carta).style(styleDatos);
-        ws.cell(startRow, 12).string(reporte.info_descriptiva.estatuto).style(styleDatos);
-        ws.cell(startRow, 13).number(reporte.info_descriptiva.sueldo_por_dia).style(styleDatos);
-        reporte.info_academica.forEach((materia, indexMateria) => {
-            const filaActual = startRow + indexMateria;
+        // Iterar sobre todos los registros del reporte (un registro = un docente con una materia)
+        reporteCompleto.registros.forEach((registro: InfoNominalDocente, indexRegistro: number) => {
+            const filaActual = startRow;
+            
+            // Datos del docente
+            ws.cell(filaActual, 1).string(`${registro.info_personal.codigo_empleado}`).style(styleDatos);
+            ws.cell(filaActual, 2).string(`${registro.info_personal.apellidos} ${registro.info_personal.nombre}`).style(styleDatos);
+            ws.cell(filaActual, 3).string(`${registro.info_personal.curp}`).style(styleDatos);
+            ws.cell(filaActual, 4).string(`${registro.info_personal.rfc}`).style(styleDatos);
+            ws.cell(filaActual, 5).string(`${registro.info_personal.grado || ''}`).style(styleDatos);
+            ws.cell(filaActual, 6).string(`${registro.info_personal.correo}`).style(styleDatos);
+            ws.cell(filaActual, 7).string(`${registro.info_personal.direccion || ''}`).style(styleDatos);
+            ws.cell(filaActual, 8).string(`${registro.info_personal.ciudad}`).style(styleDatos);
+            
+            // Datos de la carta descriptiva
+            ws.cell(filaActual, 9).number(registro.info_descriptiva.anios_experiencia_docente_materia).style(styleDatos);
+            ws.cell(filaActual, 10).string(registro.info_descriptiva.perfil_marca_carta).style(styleDatos);
+            ws.cell(filaActual, 11).number(registro.info_descriptiva.anios_experiencia_marca_carta).style(styleDatos);
+            ws.cell(filaActual, 12).string(registro.info_descriptiva.estatuto).style(styleDatos);
+            ws.cell(filaActual, 13).number(registro.info_descriptiva.sueldo_por_dia).style(styleDatos);
+            
+            // Datos académicos (ahora es un objeto único, no un array)
+            const materia = registro.info_academica;
             ws.cell(filaActual, 14).string(materia.nombre_materia).style(styleDatos);
             ws.cell(filaActual, 15).string(materia.periodo.charAt(0)).style(styleDatos);
             ws.cell(filaActual, 16).date(new Date(materia.periodo_inicial)).style(styleDatos);
@@ -646,6 +651,8 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
             ws.cell(filaActual, 19).number(materia.total_semanas_efectivas).style(styleDatos);
             ws.cell(filaActual, 20).number(materia.horas_por_semana).style(styleDatos);
             ws.cell(filaActual, 21).number(materia.total_horas_programa).style(styleDatos);
+            
+            // Horarios
             ws.cell(filaActual, 22).string(materia.lunes_entrada || '').style(styleDatos);
             ws.cell(filaActual, 23).string(materia.lunes_salida || '').style(styleDatos);
             ws.cell(filaActual, 24).number(materia.lunes_total).style(styleDatos);
@@ -661,21 +668,26 @@ export const getReporteNominaDocenteService = async (reporte: InfoNominalDocente
             ws.cell(filaActual, 34).string(materia.viernes_entrada || '').style(styleDatos);
             ws.cell(filaActual, 35).string(materia.viernes_salida || '').style(styleDatos);
             ws.cell(filaActual, 36).number(materia.viernes_total).style(styleDatos);
-
+            
+            // Cálculos de nómina
+            // Total de horas del docente (ahora es solo el total de la única materia)
+            ws.cell(filaActual, 37).number(materia.total_horas_programa).style(styleDatos);
+            
+            // Costo x hora (Obtener de columna M)
+            ws.cell(filaActual, 38).formula(`=+M${filaActual}`).style(styleDatos);
+            
+            // Total Materias (Multiplicar Total de horas del docente * Costo x hora)
+            ws.cell(filaActual, 39).formula(`=+AK${filaActual}*AL${filaActual}`).style(styleDatosNumeroContabilidad);
+            
+            // Dias periodo (Obtener la diferencia entre fecha de inicio y fin del periodo)
+            ws.cell(filaActual, 40).formula(`=+Q${filaActual}-P${filaActual}+1`).style(styleDatos);
+            
+            // Costo x dia (Dividir Total materias / Dias periodo)
+            ws.cell(filaActual, 41).formula(`=+AM${filaActual}/AN${filaActual}`).style(styleDatosNumeroMillares);
+            
+            // Actualizar startRow para el siguiente registro
+            startRow++;
         });
-        //Total de horas del docente (Sumar columna 21)
-        ws.cell(startRow, 37).formula(`SUM(U${startRow}:U${startRow + reporte.info_academica.length -1})`).style(styleDatos);
-        //Costo x hora (Sumar Columna 'M', osea columna 13)
-        // TODO: PREGUNTAR MULTIPLES
-        ws.cell(startRow, 38).formula(`=+M${startRow}`).style(styleDatos);        
-        //Total Materias (Multiplicar Total de horas del docente * Costo x hora)
-        // Agregar a celda formato de moneda (Contabilidad)
-        ws.cell(startRow, 39).formula(`=+AK${startRow}*AL${startRow}`).style(styleDatosNumeroContabilidad);
-        //Dias periodo (Obtener la diferencia entre fecha de inicio y fin del periodo)
-        ws.cell(startRow,40).formula(`=+Q${startRow}-P${startRow}+1`).style(styleDatos);
-        //Costo x dia (Dividir Total materias / Dias periodo)
-        // Agregar a celda formato de numero (Millares)
-        ws.cell(startRow,41).formula(`=+AM${startRow}/AN${startRow}`).style(styleDatosNumeroMillares);
 
     } catch (error: any) {
         guardarLogError("Error al generar el reporte de nómina docente " + error.message);

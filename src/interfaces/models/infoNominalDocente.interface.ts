@@ -14,7 +14,7 @@ export interface InfoNominalDocente {
   info_descriptiva: InfoDescriptivaDocente;
   
   // Información académica (materias, horarios, eventos)
-  info_academica: InfoAcademicaDocentePWC[];
+  info_academica: InfoAcademicaDocentePWC;
   
   // Parámetros de consulta
   periodo_consulta: {
