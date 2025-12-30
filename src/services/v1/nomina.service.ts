@@ -97,33 +97,77 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
             CALENDAR_PIVOT AS (
                 SELECT 
                     EVENT_ID,
-                    -- 1. Redondeo del cálculo de horas semanales
-                    CAST(ROUND(SUM(DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0), 0) AS INT) AS HORAS_SEMANALES_CALC,
+                    -- 1. HORAS SEMANALES
+                    -- Si residuo >= 50, suma 1 a la hora entera. 
+                    -- Si no, haz la división con decimales (/ 60.0)
+                    CAST(
+                        CASE 
+                            WHEN SUM(DATEDIFF(MINUTE, START_TIME, END_TIME)) % 60 >= 50 
+                            THEN (SUM(DATEDIFF(MINUTE, START_TIME, END_TIME)) / 60) + 1 
+                            ELSE SUM(DATEDIFF(MINUTE, START_TIME, END_TIME)) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS HORAS_SEMANALES_CALC,
+
                     -- LUNES
                     MAX(CASE WHEN [DAY] LIKE 'LUNE%' THEN FORMAT(START_TIME, 'HH:mm') END) AS LUNES_ENTRADA,
                     MAX(CASE WHEN [DAY] LIKE 'LUNE%' THEN FORMAT(END_TIME, 'HH:mm') END) AS LUNES_SALIDA,
-                    -- 2. Redondeo del total Lunes
-                    CAST(ROUND(SUM(CASE WHEN [DAY] LIKE 'LUNE%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0 ELSE 0 END), 0) AS INT) AS LUNES_TOTAL,
+                    -- 2. LUNES TOTAL
+                    CAST(
+                        CASE 
+                            WHEN SUM(CASE WHEN [DAY] LIKE 'LUNE%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) % 60 >= 50 
+                            THEN (SUM(CASE WHEN [DAY] LIKE 'LUNE%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
+                            ELSE SUM(CASE WHEN [DAY] LIKE 'LUNE%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS LUNES_TOTAL,
+
                     -- MARTES
                     MAX(CASE WHEN [DAY] LIKE 'MART%' THEN FORMAT(START_TIME, 'HH:mm') END) AS MARTES_ENTRADA,
                     MAX(CASE WHEN [DAY] LIKE 'MART%' THEN FORMAT(END_TIME, 'HH:mm') END) AS MARTES_SALIDA,
-                    -- 3. Redondeo del total Martes
-                    CAST(ROUND(SUM(CASE WHEN [DAY] LIKE 'MART%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0 ELSE 0 END), 0) AS INT) AS MARTES_TOTAL,
+                    -- 3. MARTES TOTAL
+                    CAST(
+                        CASE 
+                            WHEN SUM(CASE WHEN [DAY] LIKE 'MART%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) % 60 >= 50 
+                            THEN (SUM(CASE WHEN [DAY] LIKE 'MART%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
+                            ELSE SUM(CASE WHEN [DAY] LIKE 'MART%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS MARTES_TOTAL,
+
                     -- MIERCOLES
                     MAX(CASE WHEN [DAY] LIKE 'MIER%' THEN FORMAT(START_TIME, 'HH:mm') END) AS MIERCOLES_ENTRADA,
                     MAX(CASE WHEN [DAY] LIKE 'MIER%' THEN FORMAT(END_TIME, 'HH:mm') END) AS MIERCOLES_SALIDA,
-                    -- 4. Redondeo del total Miercoles
-                    CAST(ROUND(SUM(CASE WHEN [DAY] LIKE 'MIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0 ELSE 0 END), 0) AS INT) AS MIERCOLES_TOTAL,
+                    -- 4. MIERCOLES TOTAL
+                    CAST(
+                        CASE 
+                            WHEN SUM(CASE WHEN [DAY] LIKE 'MIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) % 60 >= 50 
+                            THEN (SUM(CASE WHEN [DAY] LIKE 'MIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
+                            ELSE SUM(CASE WHEN [DAY] LIKE 'MIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS MIERCOLES_TOTAL,
+
                     -- JUEVES
                     MAX(CASE WHEN [DAY] LIKE 'JUEV%' THEN FORMAT(START_TIME, 'HH:mm') END) AS JUEVES_ENTRADA,
                     MAX(CASE WHEN [DAY] LIKE 'JUEV%' THEN FORMAT(END_TIME, 'HH:mm') END) AS JUEVES_SALIDA,
-                    -- 5. Redondeo del total Jueves
-                    CAST(ROUND(SUM(CASE WHEN [DAY] LIKE 'JUEV%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0 ELSE 0 END), 0) AS INT) AS JUEVES_TOTAL,
+                    -- 5. JUEVES TOTAL
+                    CAST(
+                        CASE 
+                            WHEN SUM(CASE WHEN [DAY] LIKE 'JUEV%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) % 60 >= 50 
+                            THEN (SUM(CASE WHEN [DAY] LIKE 'JUEV%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
+                            ELSE SUM(CASE WHEN [DAY] LIKE 'JUEV%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS JUEVES_TOTAL,
+
                     -- VIERNES
                     MAX(CASE WHEN [DAY] LIKE 'VIER%' THEN FORMAT(START_TIME, 'HH:mm') END) AS VIERNES_ENTRADA,
                     MAX(CASE WHEN [DAY] LIKE 'VIER%' THEN FORMAT(END_TIME, 'HH:mm') END) AS VIERNES_SALIDA,
-                    -- 6. Redondeo del total Viernes
-                    CAST(ROUND(SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) / 60.0 ELSE 0 END), 0) AS INT) AS VIERNES_TOTAL
+                    -- 6. VIERNES TOTAL
+                    CAST(
+                        CASE 
+                            WHEN SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) % 60 >= 50 
+                            THEN (SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
+                            ELSE SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
+                        END 
+                    AS DECIMAL(10,2)) AS VIERNES_TOTAL
+
                 FROM Campus.dbo.CALENDARDETAIL
                 GROUP BY EVENT_ID
             ),
@@ -134,21 +178,20 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     sp.ACADEMIC_YEAR as anio,
                     sp.ACADEMIC_TERM as periodo,
                     sp.ACADEMIC_SESSION as campus,
-                    sp.SECTION as grupo, --- Cambio de nombre a Grupo de Sections
-                    se.CREDIT_TYPE as tipo, --- LICE, PREP, MAES, DOCT
-                    cc.LONG_DESC as carrera, --- EJ: ENFERMERIA, MEDICINA, MEDICINA BILINGUE
-                    se.CLASS_LEVEL as nivel_clase, --- EJ: 1CUA, 4SEM, 2SEM, 3CUA
+                    sp.SECTION as grupo, 
+                    se.CREDIT_TYPE as tipo, 
+                    cc.LONG_DESC as carrera, 
+                    se.CLASS_LEVEL as nivel_clase, 
                     se.EVENT_LONG_NAME as nombre_materia,
                     se.START_DATE as periodo_inicial,
                     se.END_DATE as periodo_final,
-                    -- COLUMNAS CALCULADAS --
-                    -- Total Semanas Efectivas (Diferencia en semanas entre inicio y fin)
+                    
                     DATEDIFF(WEEK, se.START_DATE, se.END_DATE) AS total_semanas_efectivas,
-                    -- Horas Por Semana (Plan) y Total de horas
                     ISNULL(cp.HORAS_SEMANALES_CALC, 0) AS horas_por_semana,
-                    -- Total Horas Programa (Semanas * Horas Semanales)
+                    
+                    -- Ahora sí, esta multiplicación es matemáticamente correcta
                     (DATEDIFF(WEEK, se.START_DATE, se.END_DATE) * ISNULL(cp.HORAS_SEMANALES_CALC, 0)) AS total_horas_programa,
-                    -- COLUMNAS DE HORARIO DIARIO --
+                    
                     cp.LUNES_ENTRADA, cp.LUNES_SALIDA, cp.LUNES_TOTAL,
                     cp.MARTES_ENTRADA, cp.MARTES_SALIDA, cp.MARTES_TOTAL,
                     cp.MIERCOLES_ENTRADA, cp.MIERCOLES_SALIDA, cp.MIERCOLES_TOTAL,
