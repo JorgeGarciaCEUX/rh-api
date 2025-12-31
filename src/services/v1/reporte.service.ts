@@ -128,6 +128,24 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
         size: 8,
         bold: true,
       },
+      border: {
+        left: {
+          style: "thin",
+          color: "#000000",
+        },
+        right: {
+          style: "thin",
+          color: "#000000",
+        },
+        top: {
+          style: "thin",
+          color: "#000000",
+        },
+        bottom: {
+          style: "thin",
+          color: "#000000",
+        },
+      },
       fill: {
         type: "pattern",
         patternType: "solid",
@@ -641,6 +659,29 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
         style: styleTituloDocente,
       }
     ];
+
+    var encabezadosReporteTotales = [
+      {
+        nombre: "TOTAL DIAS",
+        width: 15,
+        style: styleTituloNomina,
+      },
+      {
+        nombre: "COMPROBACION DIAS",
+        width: 15,
+        style: styleTituloNomina,
+      },
+      {
+        nombre: "PAGO TOTAL",
+        width: 15,
+        style: styleTituloNomina,
+      },
+      {
+        nombre: "COMPROBACION PAGO TOTAL",
+        width: 20,
+        style: styleTituloNomina,
+      }
+    ];
     
     const { anio, periodo, campus } = reporteCompleto.periodo_consulta;
 
@@ -794,7 +835,28 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
             });
         });
 
+        // Agregar encabezados de totales después de las quincenas
+        offsetEncabezados += quincenas.length * columnasQuincena.length;
+
+        // Agregar una columna de separación vacía
+        offsetEncabezados += 1;
+        offsetEncabezados += 1;
+
+        // Agregar primero un agrupador de totales de 1 de alto para los totales
+        ws.cell(startRow, offsetEncabezados, startRow, offsetEncabezados + encabezadosReporteTotales.length - 1, true)
+            .string("TOTALES")
+            .style(styleTituloNomina);
+
         startRow++;
+
+        // Agregar los 4 encabezados de totales (2 filas de alto para coincidir con las quincenas)
+        encabezadosReporteTotales.forEach((element, index) => {
+            ws.cell(startRow, offsetEncabezados + index, startRow + 1, offsetEncabezados + index, true)
+                .string(element.nombre)
+                .style(element.style);
+            ws.column(offsetEncabezados + index).setWidth(element.width);
+        });
+
         startRow++;
         startRow++;
 
@@ -866,6 +928,10 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
             // Datos de quincenas
             let colQuincena = 42; // Columna después de los cálculos de nómina
             
+            // Array para almacenar las columnas de días laborados y subtotales
+            const columnasDiasLaborados: string[] = [];
+            const columnasSubtotalQuincena: string[] = [];
+            
             quincenas.forEach((quincena) => {
                 const fechaInicioMateria = new Date(materia.periodo_inicial);
                 const fechaFinMateria = new Date(materia.periodo_final);
@@ -884,11 +950,13 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
                 
                 // DIAS LABORADOS
                 ws.cell(filaActual, colQuincena).number(diasLaborados).style(styleDatos);
+                columnasDiasLaborados.push(getExcelColumnName(colQuincena));
                 
                 // SUBTOTAL QUINCENA (COSTO X DIA * Dias Laborados)
                 // COSTO X DIA está en la columna AO (columna 41)
                 const colDiasLaborados = getExcelColumnName(colQuincena);
                 ws.cell(filaActual, colQuincena + 1).formula(`=+AO${filaActual}*${colDiasLaborados}${filaActual}`).style(styleDatosNumeroContabilidad);
+                columnasSubtotalQuincena.push(getExcelColumnName(colQuincena + 1));
                 
                 // HORAS FALTA (Input manual del usuario)
                 ws.cell(filaActual, colQuincena + 2).number(0).style(styleDatos);
@@ -908,6 +976,28 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
                 
                 colQuincena += 6; // Avanzar a la siguiente quincena (6 columnas)
             });
+            
+            // Agregar columnas de totales después de las quincenas
+            // Saltar una columna de separación
+            colQuincena += 1;
+            
+            // TOTAL DIAS (Suma de todos los días laborados)
+            const formulaTotalDias = columnasDiasLaborados.map(col => `${col}${filaActual}`).join('+');
+            ws.cell(filaActual, colQuincena).formula(`=+${formulaTotalDias}`).style(styleDatos);
+            
+            // COMPROBACION DIAS (DIAS PERIODO - TOTAL DIAS)
+            // DIAS PERIODO está en la columna AN (columna 40)
+            const colTotalDias = getExcelColumnName(colQuincena);
+            ws.cell(filaActual, colQuincena + 1).formula(`=+AN${filaActual}-${colTotalDias}${filaActual}`).style(styleDatos);
+            
+            // PAGO TOTAL (Suma de todos los subtotales de quincena)
+            const formulaPagoTotal = columnasSubtotalQuincena.map(col => `${col}${filaActual}`).join('+');
+            ws.cell(filaActual, colQuincena + 2).formula(`=+${formulaPagoTotal}`).style(styleDatosNumeroContabilidad);
+            
+            // COMPROBACION PAGO TOTAL (TOTAL MATERIAS - PAGO TOTAL)
+            // TOTAL MATERIAS está en la columna AM (columna 39)
+            const colPagoTotal = getExcelColumnName(colQuincena + 2);
+            ws.cell(filaActual, colQuincena + 3).formula(`=+AM${filaActual}-${colPagoTotal}${filaActual}`).style(styleDatosNumeroContabilidad);
             
             // Actualizar startRow para el siguiente registro
             startRow++;
