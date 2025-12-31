@@ -3,6 +3,88 @@ import { ReporteCompletoPlantilla } from "../../interfaces/models/ReporteComplet
 import { guardarLogError } from "../../utils/logs";
 let excel4node = require("excel4node");
 
+/**
+ * Interface para definir el periodo de una quincena
+ */
+interface Quincena {
+  nombre: string;
+  fechaInicio: Date;
+  fechaFin: Date;
+  dias: number;
+}
+
+/**
+ * Convierte un número de columna a su nombre en Excel (A, B, C, ..., AA, AB, etc.)
+ * @param columnNumber - Número de columna (1-indexed)
+ * @returns Nombre de columna en formato Excel
+ */
+const getExcelColumnName = (columnNumber: number): string => {
+  let columnName = '';
+  while (columnNumber > 0) {
+    const remainder = (columnNumber - 1) % 26;
+    columnName = String.fromCharCode(65 + remainder) + columnName;
+    columnNumber = Math.floor((columnNumber - 1) / 26);
+  }
+  return columnName;
+};
+
+/**
+ * Genera las quincenas entre dos fechas
+ * @param fechaInicio - Fecha de inicio del periodo
+ * @param fechaFin - Fecha de fin del periodo
+ * @returns Array de quincenas con sus fechas y días
+ */
+const generarQuincenas = (fechaInicio: Date, fechaFin: Date): Quincena[] => {
+  const quincenas: Quincena[] = [];
+  
+  // Trabajar con las fechas originales, sin normalizar al mes completo
+  let fechaActual = new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), 1);
+  const fechaLimite = new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate());
+  
+  while (fechaActual <= fechaLimite) {
+    const anio = fechaActual.getFullYear();
+    const mes = fechaActual.getMonth();
+    
+    // Primera quincena (1-15)
+    const inicioQuincena1 = new Date(anio, mes, 1);
+    const finQuincena1 = new Date(anio, mes, 15);
+    
+    // Solo agregar si la quincena se solapa con el rango [fechaInicio, fechaFin]
+    if (finQuincena1 >= fechaInicio && inicioQuincena1 <= fechaLimite) {
+      const diasQuincena1 = 15;
+      const nombreMes = inicioQuincena1.toLocaleDateString('es-MX', { month: 'long' }).toUpperCase();
+      quincenas.push({
+        nombre: `${nombreMes} 1-15`,
+        fechaInicio: inicioQuincena1,
+        fechaFin: finQuincena1,
+        dias: diasQuincena1
+      });
+    }
+    
+    // Segunda quincena (16-fin de mes)
+    const ultimoDiaMes = new Date(anio, mes + 1, 0).getDate();
+    const inicioQuincena2 = new Date(anio, mes, 16);
+    const finQuincena2 = new Date(anio, mes, ultimoDiaMes);
+    
+    // Solo agregar si la quincena se solapa con el rango [fechaInicio, fechaFin]
+    if (finQuincena2 >= fechaInicio && inicioQuincena2 <= fechaLimite) {
+      const diasQuincena2 = ultimoDiaMes - 15;
+      const nombreMes = inicioQuincena2.toLocaleDateString('es-MX', { month: 'long' }).toUpperCase();
+      quincenas.push({
+        nombre: `${nombreMes} 16-${ultimoDiaMes}`,
+        fechaInicio: inicioQuincena2,
+        fechaFin: finQuincena2,
+        dias: diasQuincena2
+      });
+    }
+    
+    // Avanzar al siguiente mes
+    fechaActual = new Date(anio, mes + 1, 1);
+  }
+  
+  return quincenas;
+};
+
 export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCompletoPlantilla) => {
 
     if (!reporteCompleto || !reporteCompleto.registros || reporteCompleto.registros.length === 0) {
@@ -50,6 +132,42 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
         type: "pattern",
         patternType: "solid",
         fgColor: "#b9e7a7",
+      },
+    });
+
+    var styleTituloQuincena = wb.createStyle({
+      alignment: {
+        horizontal: ["center"],
+        vertical: ["center"],
+        wrapText: true,
+      },
+      font: {
+        color: "#000000",
+        size: 8,
+        bold: true,
+      },
+      border: {
+        left: {
+          style: "thin",
+          color: "#000000",
+        },
+        right: {
+          style: "thin",
+          color: "#000000",
+        },
+        top: {
+          style: "thin",
+          color: "#000000",
+        },
+        bottom: {
+          style: "thin",
+          color: "#000000",
+        },
+      },
+      fill: {
+        type: "pattern",
+        patternType: "solid",
+        fgColor: "#d4b5f7",
       },
     });
 
@@ -617,6 +735,66 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
             ws.column(offsetEncabezados + index + 1).setWidth(element.width);
         });
 
+        //Reiniciar de nuevo al renglon del primer encabezado
+        startRow--;
+
+        // Generar encabezados de quincenas basados en las fechas de los registros
+        // 1. Encontrar las fechas más tempranas y más tardías
+        let fechaMasTempranaMs = Infinity;
+        let fechaMasTardiaMs = -Infinity;
+
+        reporteCompleto.registros.forEach((registro: InfoNominalDocente) => {
+            const fechaInicio = new Date(registro.info_academica.periodo_inicial).getTime();
+            const fechaFin = new Date(registro.info_academica.periodo_final).getTime();
+            
+            if (fechaInicio < fechaMasTempranaMs) {
+                fechaMasTempranaMs = fechaInicio;
+            }
+            if (fechaFin > fechaMasTardiaMs) {
+                fechaMasTardiaMs = fechaFin;
+            }
+        });
+
+        const fechaMasTemprana = new Date(fechaMasTempranaMs);
+        const fechaMasTardia = new Date(fechaMasTardiaMs);
+
+        // 2. Generar las quincenas
+        const quincenas = generarQuincenas(fechaMasTemprana, fechaMasTardia);
+        console.log("Fecha más temprana:", fechaMasTemprana);
+        console.log("Fecha más tardía:", fechaMasTardia);
+
+        // 3. Agregar encabezados de quincenas
+        offsetEncabezados += encabezadosReporteNomina.length;
+
+        // Encabezados de quincenas (cada quincena tiene 6 columnas)
+        const columnasQuincena = [
+            { nombre: "DIAS LABORADOS", width: 12 },
+            { nombre: "SUBTOTAL QUINCENA", width: 15 },
+            { nombre: "HORAS FALTA", width: 12 },
+            { nombre: "DESCUENTO FALTAS", width: 15 },
+            { nombre: "TOTAL QUINCENA", width: 15 },
+            { nombre: "TOTAL Q. POR DOCENTE", width: 18 }
+        ];
+
+        quincenas.forEach((quincena, indexQuincena) => {
+            const colInicio = offsetEncabezados + indexQuincena * columnasQuincena.length + 1;
+            const colFin = colInicio + columnasQuincena.length - 1;
+
+            // Header de la quincena (primer renglón)
+            ws.cell(startRow, colInicio, startRow, colFin, true)
+                .string(quincena.nombre)
+                .style(styleTituloQuincena);
+
+            // Subheaders de cada columna (segundo y tercer renglón)
+            columnasQuincena.forEach((columna, indexColumna) => {
+                ws.cell(startRow + 1, colInicio + indexColumna, startRow + 2, colInicio + indexColumna, true)
+                    .string(columna.nombre)
+                    .style(styleTituloQuincena);
+                ws.column(colInicio + indexColumna).setWidth(columna.width);
+            });
+        });
+
+        startRow++;
         startRow++;
         startRow++;
 
@@ -684,6 +862,52 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
             
             // Costo x dia (Dividir Total materias / Dias periodo)
             ws.cell(filaActual, 41).formula(`=+AM${filaActual}/AN${filaActual}`).style(styleDatosNumeroMillares);
+            
+            // Datos de quincenas
+            let colQuincena = 42; // Columna después de los cálculos de nómina
+            
+            quincenas.forEach((quincena) => {
+                const fechaInicioMateria = new Date(materia.periodo_inicial);
+                const fechaFinMateria = new Date(materia.periodo_final);
+                
+                // Calcular la intersección entre el periodo de la materia y la quincena
+                const fechaInicioInterseccion = new Date(Math.max(fechaInicioMateria.getTime(), quincena.fechaInicio.getTime()));
+                const fechaFinInterseccion = new Date(Math.min(fechaFinMateria.getTime(), quincena.fechaFin.getTime()));
+                
+                let diasLaborados = 0;
+                
+                // Si hay intersección entre la materia y la quincena
+                if (fechaInicioInterseccion <= fechaFinInterseccion) {
+                    // Calcular días laborados (diferencia de días + 1)
+                    diasLaborados = Math.floor((fechaFinInterseccion.getTime() - fechaInicioInterseccion.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                }
+                
+                // DIAS LABORADOS
+                ws.cell(filaActual, colQuincena).number(diasLaborados).style(styleDatos);
+                
+                // SUBTOTAL QUINCENA (COSTO X DIA * Dias Laborados)
+                // COSTO X DIA está en la columna AO (columna 41)
+                const colDiasLaborados = getExcelColumnName(colQuincena);
+                ws.cell(filaActual, colQuincena + 1).formula(`=+AO${filaActual}*${colDiasLaborados}${filaActual}`).style(styleDatosNumeroContabilidad);
+                
+                // HORAS FALTA (Input manual del usuario)
+                ws.cell(filaActual, colQuincena + 2).number(0).style(styleDatos);
+                
+                // DESCUENTO FALTAS (COSTO X HORA * Horas Falta)
+                // COSTO X HORA está en la columna AL (columna 38)
+                const colHorasFalta = getExcelColumnName(colQuincena + 2);
+                ws.cell(filaActual, colQuincena + 3).formula(`=+AL${filaActual}*${colHorasFalta}${filaActual}`).style(styleDatosNumeroContabilidad);
+                
+                // TOTAL QUINCENA (Subtotal Quincena - Descuento Faltas)
+                const colSubtotalQuincena = getExcelColumnName(colQuincena + 1);
+                const colDescuentoFaltas = getExcelColumnName(colQuincena + 3);
+                ws.cell(filaActual, colQuincena + 4).formula(`=+${colSubtotalQuincena}${filaActual}-${colDescuentoFaltas}${filaActual}`).style(styleDatosNumeroContabilidad);
+                
+                // TOTAL Q. POR DOCENTE (Input manual del usuario)
+                ws.cell(filaActual, colQuincena + 5).number(0).style(styleDatosNumeroContabilidad);
+                
+                colQuincena += 6; // Avanzar a la siguiente quincena (6 columnas)
+            });
             
             // Actualizar startRow para el siguiente registro
             startRow++;
