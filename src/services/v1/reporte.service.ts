@@ -801,8 +801,6 @@ export const getReporteNominaDocenteService = async (reporteCompleto: ReporteCom
 
         // 2. Generar las quincenas
         const quincenas = generarQuincenas(fechaMasTemprana, fechaMasTardia);
-        console.log("Fecha más temprana:", fechaMasTemprana);
-        console.log("Fecha más tardía:", fechaMasTardia);
 
         // 3. Agregar encabezados de quincenas
         offsetEncabezados += encabezadosReporteNomina.length;
