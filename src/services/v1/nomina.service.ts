@@ -95,7 +95,7 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
         const result_info_academica = await pwcConnection.request().query(`
             WITH 
             CALENDAR_PIVOT AS (
-                SELECT 
+                SELECT DISTINCT
                     EVENT_ID,
                     -- 1. HORAS SEMANALES
                     -- Si residuo >= 50, suma 1 a la hora entera. 
@@ -169,7 +169,11 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     AS DECIMAL(10,2)) AS VIERNES_TOTAL
 
                 FROM Campus.dbo.CALENDARDETAIL
-                GROUP BY EVENT_ID
+                GROUP BY EVENT_ID, 
+                ACADEMIC_SESSION,
+                ACADEMIC_TERM,
+                ACADEMIC_YEAR,
+                SECTION
             ),
             SCHEDULE_INFO AS (
                 SELECT DISTINCT
@@ -189,7 +193,6 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     DATEDIFF(WEEK, se.START_DATE, se.END_DATE) AS total_semanas_efectivas,
                     ISNULL(cp.HORAS_SEMANALES_CALC, 0) AS horas_por_semana,
                     
-                    -- Ahora sí, esta multiplicación es matemáticamente correcta
                     (DATEDIFF(WEEK, se.START_DATE, se.END_DATE) * ISNULL(cp.HORAS_SEMANALES_CALC, 0)) AS total_horas_programa,
                     
                     cp.LUNES_ENTRADA, cp.LUNES_SALIDA, cp.LUNES_TOTAL,
@@ -198,9 +201,19 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     cp.JUEVES_ENTRADA, cp.JUEVES_SALIDA, cp.JUEVES_TOTAL,
                     cp.VIERNES_ENTRADA, cp.VIERNES_SALIDA, cp.VIERNES_TOTAL
                 FROM SECTIONPER sp
-                LEFT JOIN SECTIONS as se ON se.EVENT_ID = sp.EVENT_ID
+                LEFT JOIN SECTIONS as se ON 
+                    se.EVENT_ID = sp.EVENT_ID 
+                    AND se.ACADEMIC_SESSION = sp.ACADEMIC_SESSION 
+                    and se.ACADEMIC_YEAR = sp.ACADEMIC_YEAR 
+                    and se.ACADEMIC_TERM = sp.ACADEMIC_TERM
+                    and se.SECTION = sp.SECTION
                 LEFT JOIN CODE_CURRICULUM as cc ON se.CURRICULUM = cc.CODE_VALUE_KEY
-                LEFT JOIN CALENDAR_PIVOT as cp ON cp.EVENT_ID = sp.EVENT_ID
+                LEFT JOIN CALENDAR_PIVOT as cp ON 
+                    cp.EVENT_ID = sp.EVENT_ID
+                    AND cp.ACADEMIC_SESSION = sp.ACADEMIC_SESSION 
+                    and cp.ACADEMIC_YEAR = sp.ACADEMIC_YEAR 
+                    and cp.ACADEMIC_TERM = sp.ACADEMIC_TERM
+                    AND cp.SECTION = sp.SECTION
             )
             SELECT DISTINCT
                 codigo,
