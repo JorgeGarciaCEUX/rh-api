@@ -64,7 +64,7 @@ export const addUser = async (req: Request, res: Response) => {
     return;
   }
 
-  await sendMail("Ya tienes acceso a PLATAFORMA", usuario.correo, platillaCorreoNuevoUsuario);
+  await sendMail("Ya tienes acceso al Portal RH", usuario.correo, platillaCorreoNuevoUsuario);
 
   res.json({
     result: "ok",

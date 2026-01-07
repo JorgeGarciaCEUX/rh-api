@@ -62,13 +62,13 @@ export const platillaCorreoNuevoUsuario = `
 <div class="container">
     <div class="header">
         <h2>
-        <span class="emoji">🎉</span>¡Bienvenido a #nombre_portal Portal!
+        <span class="emoji">🎉</span>¡Bienvenido a Portal Recursos Humanos!
         </h2>
     </div>
     <div class="section">
         <p>Hola 👋,</p>
-        <p> Nos complace informarte que ahora cuentas con acceso a la #nombre_portal. </p> Accede a traves del siguiente enlace: 
-        <a target="_blank" href="https://www">https://www</a>
+        <p> Nos complace informarte que ahora cuentas con acceso al Portal Recursos Humanos. </p> Accede a traves del siguiente enlace: 
+        <a target="_blank" href="https://rh.xochicalco.edu.mx">https://rh.xochicalco.edu.mx</a>
     </div>
     <div class="footer">
         <p class="contact-info"> Si tienes alguna pregunta, no dudes en contactarnos a través de <strong>eduardoprieto@xochicalco.edu.mx</strong> o <strong>jorgeserrano@xochicalco.edu.mx</strong>
