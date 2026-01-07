@@ -25,6 +25,7 @@ export const login = async (req: any, res: Response) => {
     const usuario = await getUserWithCorreoService(correo);
 
     if (typeof usuario === "string" || usuario === null) {
+      guardarLogError(`Usuario no encontrado o error al obtener usuario con correo: ${correo}`);
       res.json(formatMysqlErrorResponse(usuario));
       return;
     }

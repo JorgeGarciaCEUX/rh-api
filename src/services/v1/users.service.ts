@@ -58,7 +58,7 @@ export const getUserWithCorreoService = async (correo: string) => {
     const user: ViewUser | string = response.length > 0 ? (response[0] as ViewUser) : "usuario-no-encontrado";
     return user;
   } catch (error: any) {
-    guardarLogError(`Error en getUserWithCorreoService() v1:`);
+    guardarLogError(`Error en getUserWithCorreoService() v1:` + error.message);
     return handleMysqlError(error);
   }
 };
