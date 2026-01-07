@@ -169,7 +169,8 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                     AS DECIMAL(10,2)) AS VIERNES_TOTAL,
                     ACADEMIC_SESSION,
                     ACADEMIC_TERM,
-                    ACADEMIC_YEAR
+                    ACADEMIC_YEAR,
+                    SECTION
                 FROM Campus.dbo.CALENDARDETAIL
                 GROUP BY EVENT_ID, 
                 ACADEMIC_SESSION,
