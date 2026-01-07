@@ -164,6 +164,8 @@ export const downloadManualService = async () => {
 
 export const updateUserRolesService = async (id_usuario: number, roles: number[], quien_cambio: number) => {
   try {
+
+    console.log("updateUserRolesService() called with:", { id_usuario, roles, quien_cambio });
     // Validaciones de entrada
     if (!id_usuario || !Array.isArray(roles) || !quien_cambio) {
       guardarLogError("Error en updateUserRolesService() v1: Parámetros inválidos");

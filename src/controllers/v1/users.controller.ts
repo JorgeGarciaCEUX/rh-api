@@ -147,10 +147,10 @@ export const downloadManual = async (_: Request, res: Response) => {
 export const updateUserRoles = async (req: any, res: Response) => {
   try {
     const { id_usuario, role_ids } = req.body;
-    const { id } = req.user; // id del usuario que hizo el cambio
+    const { id_usuario: quien_cambio } = req.user; // id del usuario que hizo el cambio
 
     // Llamar al service
-    const update = await updateUserRolesService(id_usuario, role_ids, id);
+    const update = await updateUserRolesService(id_usuario, role_ids, quien_cambio);
 
     if (update === null) {
       res.json({
