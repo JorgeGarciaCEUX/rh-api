@@ -166,8 +166,10 @@ export const getInfoAcademicaDocentePWCService = async (codigo: string, anio: st
                             THEN (SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60) + 1 
                             ELSE SUM(CASE WHEN [DAY] LIKE 'VIER%' THEN DATEDIFF(MINUTE, START_TIME, END_TIME) ELSE 0 END) / 60.0 
                         END 
-                    AS DECIMAL(10,2)) AS VIERNES_TOTAL
-
+                    AS DECIMAL(10,2)) AS VIERNES_TOTAL,
+                    ACADEMIC_SESSION,
+                    ACADEMIC_TERM,
+                    ACADEMIC_YEAR
                 FROM Campus.dbo.CALENDARDETAIL
                 GROUP BY EVENT_ID, 
                 ACADEMIC_SESSION,
